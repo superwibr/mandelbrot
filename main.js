@@ -34,7 +34,7 @@ function resizeCanvases() {
 let centerX = -0.75; // Starting x-coordinate
 let centerY = 0;     // Starting y-coordinate
 let zoom = 200;      // Pixels per unit
-const maxIterationsCap = 2000; // iteration count
+let maxIterationsCap = 2000; // Default iteration count
 
 let showUI = true;
 
@@ -123,18 +123,20 @@ function drawViewfinder() {
 
 	// Display zoom and position
 	const textX = 10, textY = 20;
-	uiCtx.fillText(`Zoom: ${zoom.toFixed(2)}`, textX, textY);
-	uiCtx.fillText(`Center: (${centerX.toFixed(8)}, ${centerY.toFixed(8)})`, textX, textY + 20);
+	uiCtx.fillText(`Steps: ${Math.min(maxIterationsCap, Math.floor(50 + zoom / 10)).toFixed(2)} (max ${maxIterationsCap})`, textX, textY);
+	uiCtx.fillText(`Zoom: ${zoom.toFixed(2)}`, textX, textY + 20);
+	uiCtx.fillText(`Center: (${centerX.toFixed(8)}, ${centerY.toFixed(8)})`, textX, textY + 40);
 
 	// Display keybinds
 	const keybinds = [
 		'WASD: Move',
 		'Q/E: Zoom Out/In',
 		'Space: Render',
+		'1/2: Remove/Add 100 steps',
 		'Shift: Toggle UI'
 	];
 	keybinds.forEach((text, i) => {
-		uiCtx.fillText(text, textX, textY + 50 + i * 20);
+		uiCtx.fillText(text, textX, textY + 70 + i * 20);
 	});
 	uiCtx.restore();
 }
@@ -187,9 +189,11 @@ function transformCanvas(moveX, moveY, scale) {
 // Input Controls
 const keys = {};
 const zoomFactor = 1.5; // Constant zoom factor
+const stepStep = 100;
 document.addEventListener('keyup', e => delete keys[e.code]);
 document.addEventListener('keydown', e => {
 	keys[e.code] = true;
+	console.log(e.code);
 
 	if (keys.KeyQ) {
 		// Zoom Out
@@ -210,8 +214,24 @@ document.addEventListener('keydown', e => {
 		drawViewfinder();
 		compositeCanvases();
 	}
+
 	if (keys.Space) renderFractal(); // Recompute the fractal
+
+	if(keys.Digit1){
+		// Decrease steps
+		maxIterationsCap -= stepStep;
+		drawViewfinder();
+		compositeCanvases();
+	}
+	if(keys.Digit2){
+		// Increase steps
+		maxIterationsCap += stepStep;
+		drawViewfinder();
+		compositeCanvases();
+	}
+
 	if (keys.ShiftLeft) {
+		// Toggle UI
 		showUI = !showUI;
 		drawViewfinder();
 		compositeCanvases();
